@@ -2,8 +2,8 @@ from fastapi import FastAPI
 from app.api.routes import agents, logs, auth
 
 app = FastAPI(
-    title="Model Auditor API",
-    version="0.1"
+    title="Model Auditor",
+    version="1.0.0"
 )
 
 app.include_router(auth.router, prefix="/auth", tags=["auth"])

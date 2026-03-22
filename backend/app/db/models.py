@@ -8,6 +8,7 @@ import sqlalchemy as sa
 import uuid
 from datetime import datetime
 import enum
+from sqlalchemy.sql import func
 
 Base = declarative_base()
 
@@ -301,3 +302,28 @@ class AuditLog(Base):
     after = Column(JSONB)
 
     created_at = Column(TIMESTAMP, server_default=sa.text("now()"))
+
+# -------------------------
+# AGENTCONFIG
+# -------------------------
+class AgentConfig(Base):
+    __tablename__ = "agent_configs"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    agent_id = Column(String, ForeignKey("agents.id"), nullable=False)
+    tenant_id = Column(UUID(as_uuid=True), nullable=False)
+
+    provider = Column(Text, nullable=False)
+    model_name = Column(Text, nullable=False)
+
+    encrypted_api_key = Column(Text, nullable=True)
+
+    # flexible configs
+    config = Column(JSONB, nullable=False, default=dict)
+
+    # controls what agent can edit
+    editable_fields = Column(JSONB, nullable=False, default=list)
+
+    created_at = Column(TIMESTAMP, server_default=func.now())
+    updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
