@@ -163,8 +163,8 @@ export default function AnimatedSidebar() {
           }`}
         >
           <motion.button
-            className="w-full py-3 bg-cyan-400 text-black font-bold uppercase tracking-widest text-xs rounded-sm hover:shadow-[0_0_20px_rgba(0,240,255,0.5)] transition-all duration-200 flex items-center justify-center gap-2"
-            whileHover={{ scale: 1.02, boxShadow: '0 0 20px rgba(0,240,255,0.5)' }}
+            className="w-full py-3 px-4 bg-cyan-400 text-black font-bold uppercase tracking-widest text-xs rounded-sm hover:shadow-[0_0_20px_rgba(0,240,255,0.5)] active:scale-95 transition-all duration-200 flex items-center justify-center gap-2"
+            whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
             <svg
@@ -173,15 +173,12 @@ export default function AnimatedSidebar() {
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              strokeWidth="1.5"
+              strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <circle cx="12" cy="12" r="1"></circle>
-              <path d="M12 1v6m0 6v6"></path>
-              <path d="M4.22 4.22l4.24 4.24m3.08 3.08l4.24 4.24"></path>
-              <path d="M1 12h6m6 0h6"></path>
-              <path d="M4.22 19.78l4.24-4.24m3.08-3.08l4.24-4.24"></path>
+              <polyline points="12 5 12 19"></polyline>
+              <polyline points="5 12 19 12"></polyline>
             </svg>
             <span>New Audit</span>
           </motion.button>

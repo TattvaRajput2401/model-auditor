@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 
 export default function Home() {
   const router = useRouter();
@@ -13,8 +14,8 @@ export default function Home() {
   return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
-        <div className="material-symbols-outlined text-6xl text-primary mb-4 animate-spin">loading</div>
-        <p className="text-on-surface-variant font-body">Initializing Model Auditor...</p>
+        <Loader2 size={60} className="text-cyan-400 mb-4 animate-spin mx-auto" strokeWidth={1.5} />
+        <p className="text-slate-400 font-body text-sm">Initializing Model Auditor...</p>
       </div>
     </div>
   );

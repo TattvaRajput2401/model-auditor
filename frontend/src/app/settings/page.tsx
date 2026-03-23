@@ -1,572 +1,384 @@
 'use client';
 
 import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Settings, Users, Wifi, Webhook, Copy, Upload as UploadIcon } from 'lucide-react';
 import DashboardLayout from '@/components/ui/dashboard-layout';
+import PageTransition from '@/components/ui/page-transition';
 
 type SettingsTab = 'general' | 'users' | 'network' | 'webhooks';
+
+const containerVariants = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1, transition: { staggerChildren: 0.1 } },
+};
+
+const SettingCard = ({ title, description, icon: Icon, children }: any) => (
+  <motion.div
+    className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-800/50 p-8 rounded-lg backdrop-blur-sm"
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.4 }}
+  >
+    <div className="flex items-center gap-4 mb-6">
+      <motion.div
+        className="text-cyan-400"
+        animate={{ scale: [1, 1.1, 1] }}
+        transition={{ duration: 3, repeat: Infinity }}
+      >
+        <Icon size={28} strokeWidth={1.5} />
+      </motion.div>
+      <div>
+        <h3 className="text-lg font-headline font-bold text-cyan-400 uppercase tracking-tight">{title}</h3>
+        {description && <p className="text-xs text-slate-400 mt-1">{description}</p>}
+      </div>
+    </div>
+    {children}
+  </motion.div>
+);
+
+const TabButton = ({ id, label, icon: Icon, active, onClick }: any) => (
+  <motion.button
+    onClick={onClick}
+    className={`flex items-center gap-2 px-6 py-3 font-headline text-xs uppercase tracking-widest transition-all rounded-sm ${
+      active
+        ? 'bg-cyan-400/10 text-cyan-400 border border-cyan-400/30'
+        : 'text-slate-400 hover:text-slate-300 border border-transparent hover:border-slate-700/50'
+    }`}
+    whileHover={{ scale: 1.02 }}
+    whileTap={{ scale: 0.98 }}
+  >
+    <Icon size={18} strokeWidth={1.5} />
+    {label}
+  </motion.button>
+);
+
+const ToggleSwitch = ({ enabled, onChange }: any) => (
+  <motion.button
+    onClick={() => onChange(!enabled)}
+    className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors ${
+      enabled ? 'bg-cyan-400/20 border border-cyan-400/50' : 'bg-slate-700/30 border border-slate-600/50'
+    }`}
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.95 }}
+  >
+    <motion.div
+      className={`inline-block h-4 w-4 transform rounded-full transition-colors ${
+        enabled ? 'bg-cyan-400' : 'bg-slate-500'
+      }`}
+      animate={{ x: enabled ? 20 : 2 }}
+    />
+  </motion.button>
+);
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
   const [maintenanceEnabled, setMaintenanceEnabled] = useState(false);
   const [quarantineEnabled, setQuarantineEnabled] = useState(false);
-  const [confidenceThreshold, setConfidenceThreshold] = useState(0);
-  const [auditVelocity, setAuditVelocity] = useState(0);
+  const [confidenceThreshold, setConfidenceThreshold] = useState(0.85);
+  const [auditVelocity, setAuditVelocity] = useState(1000);
 
   return (
-    <DashboardLayout>
-      <div className="min-h-screen bg-[#0e0e0e]">
-        {/* Page Header */}
-        <div className="mb-12">
-          <h1 className="font-headline text-5xl font-bold tracking-tighter text-white mb-2 uppercase">
-            Settings
-          </h1>
-          <p className="text-[#adaaaa] text-lg">
-            Control the core operational parameters of the audit node
-          </p>
-        </div>
+    <PageTransition>
+      <DashboardLayout>
+        <div className="pt-8 pb-16 px-6 md:px-0">
+          {/* Page Header */}
+          <motion.header
+            className="mb-12"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <h1 className="text-5xl font-headline font-bold tracking-tighter text-primary mb-2 uppercase">
+              System <span className="text-cyan-400">Settings</span>
+            </h1>
+            <p className="text-slate-400 font-body text-sm">Control core operational parameters of the audit node</p>
+          </motion.header>
 
-        {/* Settings Navigation Tabs */}
-        <div className="mb-8 flex gap-4 border-b border-[#494847] overflow-x-auto pb-4">
-          {[
-            { id: 'general', label: 'General', icon: 'tune' },
-            { id: 'users', label: 'User Management', icon: 'group' },
-            { id: 'network', label: 'Network Config', icon: 'lan' },
-            { id: 'webhooks', label: 'Global Webhooks', icon: 'webhook' },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as SettingsTab)}
-              className={`flex items-center gap-2 px-6 py-3 font-headline text-sm uppercase tracking-widest whitespace-nowrap transition-all ${
-                activeTab === tab.id
-                  ? 'text-[#8ff5ff] border-b-2 border-[#8ff5ff] bg-[#8ff5ff]/5'
-                  : 'text-[#adaaaa] hover:text-white border-b-2 border-transparent'
-              }`}
-            >
-              <span className="material-symbols-outlined text-lg">{tab.icon}</span>
-              {tab.label}
-            </button>
-          ))}
-        </div>
-        {/* GENERAL SETTINGS TAB */}
-        {activeTab === 'general' && (
-          <div className="space-y-8">
-            {/* Platform Identity Section */}
-            <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 glass-panel p-8 rounded-lg neon-glow">
-                <div className="flex items-center gap-3 mb-8">
-                  <span className="material-symbols-outlined text-[#8ff5ff] text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>
-                    fingerprint
-                  </span>
-                  <h3 className="font-headline text-2xl font-bold text-[#8ff5ff] uppercase tracking-tight">
-                    Platform Identity
-                  </h3>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-2">
-                    <label className="text-[10px] uppercase tracking-widest text-[#494847] font-bold">
+          {/* Tab Navigation */}
+          <motion.div
+            className="mb-8 flex gap-3 border-b border-slate-800/50 pb-4 overflow-x-auto"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <TabButton
+              id="general"
+              label="General"
+              icon={Settings}
+              active={activeTab === 'general'}
+              onClick={() => setActiveTab('general')}
+            />
+            <TabButton
+              id="users"
+              label="Users"
+              icon={Users}
+              active={activeTab === 'users'}
+              onClick={() => setActiveTab('users')}
+            />
+            <TabButton
+              id="network"
+              label="Network"
+              icon={Wifi}
+              active={activeTab === 'network'}
+              onClick={() => setActiveTab('network')}
+            />
+            <TabButton
+              id="webhooks"
+              label="Webhooks"
+              icon={Webhook}
+              active={activeTab === 'webhooks'}
+              onClick={() => setActiveTab('webhooks')}
+            />
+          </motion.div>
+          {/* GENERAL SETTINGS */}
+          {activeTab === 'general' && (
+            <motion.div className="space-y-8" variants={containerVariants} initial="initial" animate="animate">
+              {/* Platform Identity */}
+              <SettingCard title="Platform Identity" icon={Settings}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 block">
                       System Display Name
                     </label>
                     <input
                       type="text"
-                      defaultValue=""
-                      className="w-full bg-[#000000] border border-[#494847] text-white px-4 py-3 rounded-sm focus:border-[#bf81ff] outline-none transition-colors"
+                      placeholder="Model Auditor"
+                      className="w-full bg-slate-800/30 border border-slate-700/50 text-slate-200 px-4 py-2 rounded-sm focus:border-cyan-400/50 outline-none transition-all text-sm"
                     />
                   </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[10px] uppercase tracking-widest text-[#494847] font-bold">
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 block">
                       Operational Node ID
                     </label>
-                    <div className="flex">
+                    <div className="flex gap-2">
                       <input
                         type="text"
                         readOnly
-                        value=""
-                        className="flex-1 bg-[#000000] border border-[#494847] text-[#bf81ff] px-4 py-3 rounded-sm font-mono text-xs opacity-80 focus:outline-none"
+                        value="node_audit_001_xyz"
+                        className="flex-1 bg-slate-800/30 border border-slate-700/50 text-cyan-400 px-4 py-2 rounded-sm font-mono text-xs opacity-75 focus:outline-none"
                       />
-                      <button className="bg-[#262626] px-4 border border-l-0 border-[#494847] hover:bg-[#1a1919] transition-colors">
-                        <span className="material-symbols-outlined text-sm">content_copy</span>
-                      </button>
+                      <motion.button
+                        className="px-3 bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-cyan-400 rounded-sm transition-colors"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Copy size={16} strokeWidth={1.5} />
+                      </motion.button>
                     </div>
                   </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[10px] uppercase tracking-widest text-[#494847] font-bold">
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 block">
                       Primary Audit Region
                     </label>
-                    <select className="w-full bg-[#000000] border border-[#494847] text-white px-4 py-3 rounded-sm focus:border-[#bf81ff] outline-none transition-colors">
+                    <select className="w-full bg-slate-800/30 border border-slate-700/50 text-slate-200 px-4 py-2 rounded-sm focus:border-cyan-400/50 outline-none text-sm">
                       <option>US-EAST-OBSERVATORY</option>
                       <option>EU-WEST-SYNTHETIC</option>
                       <option>ASIA-PAC-KINETIC</option>
                     </select>
                   </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[10px] uppercase tracking-widest text-[#494847] font-bold">
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 block">
                       API Endpoint
                     </label>
                     <input
                       type="text"
-                      defaultValue=""
-                      className="w-full bg-[#000000] border border-[#494847] text-white px-4 py-3 rounded-sm focus:border-[#bf81ff] outline-none transition-colors"
                       placeholder="https://api.example.com"
+                      className="w-full bg-slate-800/30 border border-slate-700/50 text-slate-200 px-4 py-2 rounded-sm focus:border-cyan-400/50 outline-none transition-all text-sm"
                     />
                   </div>
                 </div>
 
-                {/* Logo Upload */}
-                <div className="mt-8 flex flex-col items-center justify-center border-2 border-dashed border-[#494847] p-8 group hover:border-[#8ff5ff] transition-colors cursor-pointer">
-                  <span className="material-symbols-outlined text-4xl text-[#494847] group-hover:text-[#8ff5ff] transition-colors mb-4">
-                    upload_file
-                  </span>
-                  <p className="text-xs text-center text-white font-bold uppercase tracking-widest">
-                    Upload System Logo
-                  </p>
-                  <p className="text-[10px] text-[#494847] mt-1 uppercase">SVG or PNG (Max 5MB)</p>
-                </div>
-              </div>
+                <motion.div
+                  className="border-2 border-dashed border-slate-700/50 p-8 rounded-lg text-center hover:border-cyan-400/50 transition-colors cursor-pointer group"
+                  whileHover={{ borderColor: 'rgba(0, 240, 255, 0.5)' }}
+                >
+                  <UploadIcon size={40} className="text-slate-600 group-hover:text-cyan-400 transition-colors mx-auto mb-3" strokeWidth={1.5} />
+                  <p className="text-xs font-bold text-slate-300 uppercase tracking-widest mb-1">Upload System Logo</p>
+                  <p className="text-[10px] text-slate-500 uppercase">SVG or PNG (Max 5MB)</p>
+                </motion.div>
+              </SettingCard>
 
               {/* Maintenance Window */}
-              <div className="bg-[#131313] border-l-2 border-[#bf81ff] p-8">
-                <div className="flex items-center gap-3 mb-8">
-                  <span className="material-symbols-outlined text-[#bf81ff] text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>
-                    event_repeat
-                  </span>
-                  <h3 className="font-headline text-xl font-bold text-[#bf81ff] uppercase tracking-tight">
-                    Maintenance
-                  </h3>
-                </div>
+              <SettingCard title="Maintenance" icon={Settings} description="Schedule system maintenance windows">
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">
+                      Enable Maintenance Mode
+                    </label>
+                    <ToggleSwitch enabled={maintenanceEnabled} onChange={setMaintenanceEnabled} />
+                  </div>
 
-                <div className="space-y-8">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <label className="text-[10px] uppercase tracking-widest text-[#494847] font-bold">
-                        Scheduled Downtime
-                      </label>
-                      <button
-                        onClick={() => setMaintenanceEnabled(!maintenanceEnabled)}
-                        className={`w-10 h-5 rounded-full relative transition-colors ${
-                          maintenanceEnabled ? 'bg-[#bf81ff]' : 'bg-[#262626]'
-                        }`}
-                      >
-                        <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-transform ${maintenanceEnabled ? 'right-1' : 'left-1'}`}></div>
-                      </button>
-                    </div>
-
-                    <div className="space-y-2">
-                      <p className="text-[10px] text-[#494847] uppercase font-medium">Recurrence</p>
-                      <div className="grid grid-cols-4 gap-2">
-                        <button className="bg-[#bf81ff] text-[#32005c] text-[10px] font-bold py-2 uppercase transition-all hover:brightness-110">
-                          Sun
-                        </button>
-                        {['Mon', 'Tue', 'Wed'].map((day) => (
-                          <button
-                            key={day}
-                            className="bg-[#262626] text-[#adaaaa] text-[10px] font-bold py-2 uppercase hover:bg-[#1a1919] transition-colors"
-                          >
-                            {day}
-                          </button>
-                        ))}
+                  {maintenanceEnabled && (
+                    <motion.div
+                      className="space-y-4 p-4 bg-slate-800/30 border border-slate-700/30 rounded-sm"
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                    >
+                      <div>
+                        <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-3">Recurrence</p>
+                        <div className="grid grid-cols-7 gap-2">
+                          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (
+                            <motion.button
+                              key={day}
+                              className={`py-2 rounded-sm text-[10px] font-bold uppercase transition-all ${
+                                idx === 0
+                                  ? 'bg-cyan-400/20 text-cyan-400 border border-cyan-400/50'
+                                  : 'bg-slate-700/30 text-slate-400 border border-slate-600/30 hover:border-slate-500/50'
+                              }`}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              {day}
+                            </motion.button>
+                          ))}
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="space-y-2">
-                      <p className="text-[10px] text-[#494847] uppercase font-medium">Window Start (UTC)</p>
+                      <div className="space-y-2">
+                        <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">
+                          Start Time (UTC)
+                        </label>
+                        <input
+                          type="time"
+                          defaultValue="00:00"
+                          className="w-full bg-slate-800/30 border border-slate-700/50 text-slate-200 px-4 py-2 rounded-sm focus:border-cyan-400/50 outline-none font-mono text-sm"
+                        />
+                      </div>
+
+                      <div className="p-3 bg-cyan-400/5 border border-cyan-400/20 rounded-sm">
+                        <p className="text-[10px] text-cyan-300 font-medium uppercase leading-relaxed">
+                          System updates will run during this window. Auditor enters standby mode.
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              </SettingCard>
+
+              {/* Audit Parameters */}
+              <SettingCard title="Audit Parameters" icon={Settings} description="Configure audit execution behavior">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">
+                        Confidence Threshold
+                      </label>
+                      <span className="text-sm font-mono text-cyan-400 font-bold">{confidenceThreshold.toFixed(2)}</span>
+                    </div>
+                    <div className="relative h-2 bg-slate-800/50 rounded-full overflow-hidden">
+                      <motion.div
+                        className="absolute h-full bg-gradient-to-r from-cyan-400 to-cyan-300"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${confidenceThreshold * 100}%` }}
+                        transition={{ duration: 0.3 }}
+                      />
                       <input
-                        type="time"
-                        defaultValue="00:00"
-                        className="w-full bg-[#000000] border border-[#494847] text-white px-4 py-2 rounded-sm font-mono focus:border-[#bf81ff] outline-none transition-colors"
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value={confidenceThreshold}
+                        onChange={(e) => setConfidenceThreshold(parseFloat(e.target.value))}
+                        className="absolute inset-0 w-full opacity-0 cursor-pointer"
                       />
                     </div>
-
-                    <div className="p-4 bg-[#bf81ff]/5 border border-[#bf81ff]/20">
-                      <p className="text-[11px] text-[#bf81ff] font-medium leading-relaxed uppercase italic">
-                        System updates and database indexing will trigger during this window. Auditor will enter stand-by mode.
-                      </p>
-                    </div>
+                    <p className="text-[10px] text-slate-500 uppercase leading-tight">
+                      Models below threshold trigger audit logging immediately.
+                    </p>
                   </div>
-                </div>
-              </div>
-            </section>
 
-            {/* Audit Parameters */}
-            <section className="glass-panel p-8 rounded-lg neon-glow">
-              <div className="flex items-center gap-4 mb-10">
-                <span className="material-symbols-outlined text-[#afffd1] text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>
-                  analytics
-                </span>
-                <h3 className="font-headline text-2xl font-bold text-[#afffd1] uppercase tracking-tight">
-                  Audit Parameters
-                </h3>
-                <div className="h-[1px] flex-1 bg-gradient-to-r from-[#afffd1]/20 to-transparent"></div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-                {/* Confidence Threshold */}
-                <div className="space-y-6">
-                  <div className="flex justify-between items-end">
-                    <label className="text-[10px] uppercase tracking-widest text-[#494847] font-bold">
-                      Default Confidence Threshold
+                  <div className="space-y-4">
+                    <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold block">
+                      Audit Velocity Limit
                     </label>
-                    <span className="font-mono text-[#afffd1] text-xl font-bold">{confidenceThreshold.toFixed(2)}</span>
-                  </div>
-                  <div className="relative h-2 bg-[#131313] rounded-full cursor-pointer">
-                    <div
-                      className="absolute h-full bg-gradient-to-r from-[#8ff5ff] to-[#afffd1] rounded-full"
-                      style={{ width: `${confidenceThreshold * 100}%` }}
-                    ></div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.01"
-                      value={confidenceThreshold}
-                      onChange={(e) => setConfidenceThreshold(parseFloat(e.target.value))}
-                      className="absolute inset-0 w-full opacity-0 cursor-pointer"
-                    />
-                  </div>
-                  <p className="text-[10px] text-[#adaaaa] uppercase leading-tight">
-                    Models falling below this threshold will trigger immediate audit logging.
-                  </p>
-                </div>
-
-                {/* Automatic Quarantine */}
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <label className="text-[10px] uppercase tracking-widest text-[#494847] font-bold">
-                      Automatic Quarantine
-                    </label>
-                    <button
-                      onClick={() => setQuarantineEnabled(!quarantineEnabled)}
-                      className={`w-12 h-6 rounded-full relative transition-colors border ${
-                        quarantineEnabled
-                          ? 'bg-[#afffd1]/20 border-[#afffd1]/40'
-                          : 'bg-[#262626]/20 border-[#262626]/40'
-                      }`}
-                    >
-                      <div
-                        className={`absolute top-1 w-4 h-4 rounded-full transition-all ${
-                          quarantineEnabled
-                            ? 'left-6 bg-[#afffd1]'
-                            : 'left-1 bg-[#262626]'
-                        }`}
-                      ></div>
-                    </button>
-                  </div>
-                  <div className="flex items-center justify-between p-4 bg-[#000000] border border-[#494847]/30">
-                    <span className="text-[10px] uppercase font-bold text-[#adaaaa]">Quarantine Level</span>
-                    <span className="text-[#afffd1] text-[10px] font-bold uppercase tracking-widest">
-                      Hard Lockdown
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-[#adaaaa] uppercase leading-tight">
-                    Restrict model traffic immediately upon discovery of adversarial drift.
-                  </p>
-                </div>
-
-                {/* Audit Velocity Limit */}
-                <div className="space-y-6">
-                  <label className="text-[10px] uppercase tracking-widest text-[#494847] font-bold">
-                    Audit Velocity Limit
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      value={auditVelocity}
-                      onChange={(e) => setAuditVelocity(parseInt(e.target.value))}
-                      className="w-full bg-[#000000] border border-[#494847] text-white px-4 py-3 rounded-sm font-mono focus:border-[#bf81ff] outline-none transition-colors"
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] uppercase text-[#494847] font-bold">
-                      Req/Sec
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-[#adaaaa] uppercase leading-tight">
-                    Peak auditing speed per node. Exceeding this will queue log entries.
-                  </p>
-                </div>
-              </div>
-            </section>
-
-            {/* Regional Settings */}
-            <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-[#131313] p-6 border-t border-[#494847]/20">
-                <label className="text-[10px] uppercase tracking-widest text-[#494847] font-bold block mb-4">
-                  Timezone Selection
-                </label>
-                <select className="w-full bg-transparent border-0 border-b border-[#494847] text-white px-0 py-2 rounded-none focus:outline-none text-sm font-medium">
-                  <option>UTC (Coordinated Universal Time)</option>
-                  <option>EDT (Eastern Daylight Time)</option>
-                  <option>PDT (Pacific Daylight Time)</option>
-                </select>
-              </div>
-              <div className="bg-[#131313] p-6 border-t border-[#494847]/20">
-                <label className="text-[10px] uppercase tracking-widest text-[#494847] font-bold block mb-4">
-                  Language (System Default)
-                </label>
-                <select className="w-full bg-transparent border-0 border-b border-[#494847] text-white px-0 py-2 rounded-none focus:outline-none text-sm font-medium">
-                  <option>EN-US (Observatory English)</option>
-                  <option>DE-CH (Synthetic High German)</option>
-                  <option>JP-TK (Neo-Tokyo Japanese)</option>
-                </select>
-              </div>
-              <div className="bg-[#131313] p-6 border-t border-[#494847]/20">
-                <label className="text-[10px] uppercase tracking-widest text-[#494847] font-bold block mb-4">
-                  Date Formatting
-                </label>
-                <div className="flex gap-4">
-                  <button className="flex-1 py-2 border border-[#8ff5ff] text-[#8ff5ff] text-[10px] font-bold uppercase tracking-widest hover:brightness-110 transition-all">
-                    YYYY-MM-DD
-                  </button>
-                  <button className="flex-1 py-2 border border-[#494847] text-[#494847] text-[10px] font-bold uppercase tracking-widest hover:border-white transition-colors">
-                    DD/MM/YYYY
-                  </button>
-                </div>
-              </div>
-            </section>
-
-            {/* Footer Actions */}
-            <div className="mt-16 pt-8 border-t border-[#494847]/20 flex justify-end gap-6">
-              <button className="px-8 py-3 text-[#adaaaa] font-headline font-bold uppercase tracking-tighter hover:text-white transition-colors">
-                Reset to Defaults
-              </button>
-              <button className="px-10 py-3 bg-[#8ff5ff] text-[#005d63] font-headline font-bold uppercase tracking-tighter neon-glow transition-all hover:brightness-110 active:scale-95">
-                Commit Changes
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* USER MANAGEMENT TAB */}
-        {activeTab === 'users' && (
-          <div className="glass-panel p-8 rounded-lg neon-glow">
-            <div className="flex items-center gap-3 mb-8">
-              <span className="material-symbols-outlined text-[#bf81ff] text-2xl">people</span>
-              <h3 className="font-headline text-2xl font-bold text-[#bf81ff] uppercase">User Management</h3>
-            </div>
-
-            <div className="space-y-6">
-              {/* User List */}
-              <div className="bg-[#000000] border border-[#494847] rounded-lg overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead className="bg-[#1a1919] border-b border-[#494847]">
-                      <tr>
-                        <th className="px-6 py-3 text-[10px] uppercase tracking-widest text-[#adaaaa] font-bold">Name</th>
-                        <th className="px-6 py-3 text-[10px] uppercase tracking-widest text-[#adaaaa] font-bold">Email</th>
-                        <th className="px-6 py-3 text-[10px] uppercase tracking-widest text-[#adaaaa] font-bold">Role</th>
-                        <th className="px-6 py-3 text-[10px] uppercase tracking-widest text-[#adaaaa] font-bold">Status</th>
-                        <th className="px-6 py-3 text-[10px] uppercase tracking-widest text-[#adaaaa] font-bold">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#262626]">
-                      {[
-                        { name: 'Admin User', email: 'admin@model-auditor.io', role: 'Administrator', status: 'Active' },
-                        { name: 'Audit Operator', email: 'operator@model-auditor.io', role: 'Operator', status: 'Active' },
-                        { name: 'Monitor Agent', email: 'monitor@model-auditor.io', role: 'Observer', status: 'Inactive' },
-                      ].map((user, idx) => (
-                        <tr key={idx} className="hover:bg-[#1a1919] transition-colors">
-                          <td className="px-6 py-4 text-sm text-white">{user.name}</td>
-                          <td className="px-6 py-4 text-sm text-[#adaaaa]">{user.email}</td>
-                          <td className="px-6 py-4 text-sm text-[#8ff5ff] font-mono">{user.role}</td>
-                          <td className="px-6 py-4 text-sm">
-                            <span className={`px-3 py-1 rounded-sm text-[10px] font-bold uppercase tracking-widest ${
-                              user.status === 'Active'
-                                ? 'bg-[#afffd1]/20 text-[#afffd1]'
-                                : 'bg-[#494847]/20 text-[#adaaaa]'
-                            }`}>
-                              {user.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-sm">
-                            <button className="text-[#8ff5ff] hover:text-white transition-colors text-[10px] uppercase font-bold">
-                              Edit
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Add User Form */}
-              <div className="bg-[#131313] border border-[#494847]/20 p-6 rounded-lg">
-                <h4 className="font-headline text-lg font-bold text-[#bf81ff] uppercase mb-4">Add New User</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input
-                    type="text"
-                    placeholder="Full Name"
-                    className="bg-[#000000] border border-[#494847] text-white px-4 py-3 rounded-sm text-sm focus:border-[#bf81ff] outline-none"
-                  />
-                  <input
-                    type="email"
-                    placeholder="Email Address"
-                    className="bg-[#000000] border border-[#494847] text-white px-4 py-3 rounded-sm text-sm focus:border-[#bf81ff] outline-none"
-                  />
-                  <select className="bg-[#000000] border border-[#494847] text-white px-4 py-3 rounded-sm text-sm focus:border-[#bf81ff] outline-none">
-                    <option>Select Role</option>
-                    <option>Administrator</option>
-                    <option>Operator</option>
-                    <option>Observer</option>
-                  </select>
-                  <button className="bg-[#bf81ff] text-[#32005c] font-headline font-bold uppercase tracking-tighter py-3 rounded-sm hover:brightness-110 transition-all active:scale-95">
-                    Add User
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* NETWORK CONFIG TAB */}
-        {activeTab === 'network' && (
-          <div className="glass-panel p-8 rounded-lg neon-glow">
-            <div className="flex items-center gap-3 mb-8">
-              <span className="material-symbols-outlined text-[#afffd1] text-2xl">router</span>
-              <h3 className="font-headline text-2xl font-bold text-[#afffd1] uppercase">Network Configuration</h3>
-            </div>
-
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase tracking-widest text-[#494847] font-bold">API Host</label>
-                  <input
-                    type="text"
-                    defaultValue=""
-                    className="w-full bg-[#000000] border border-[#494847] text-white px-4 py-3 rounded-sm focus:border-[#afffd1] outline-none transition-colors"
-                    placeholder="0.0.0.0"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase tracking-widest text-[#494847] font-bold">API Port</label>
-                  <input
-                    type="number"
-                    defaultValue="0"
-                    className="w-full bg-[#000000] border border-[#494847] text-white px-4 py-3 rounded-sm focus:border-[#afffd1] outline-none transition-colors"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase tracking-widest text-[#494847] font-bold">
-                    Max Connections
-                  </label>
-                  <input
-                    type="number"
-                    defaultValue="0"
-                    className="w-full bg-[#000000] border border-[#494847] text-white px-4 py-3 rounded-sm focus:border-[#afffd1] outline-none transition-colors"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase tracking-widest text-[#494847] font-bold">
-                    Request Timeout (ms)
-                  </label>
-                  <input
-                    type="number"
-                    defaultValue="0"
-                    className="w-full bg-[#000000] border border-[#494847] text-white px-4 py-3 rounded-sm focus:border-[#afffd1] outline-none transition-colors"
-                  />
-                </div>
-              </div>
-
-              <div className="bg-[#131313] border border-[#494847]/20 p-6 rounded-lg">
-                <h4 className="font-headline text-lg font-bold text-[#afffd1] uppercase mb-4">Allowed Origins (CORS)</h4>
-                <div className="space-y-2">
-                  {[].map((origin, idx) => (
-                    <div key={idx} className="flex items-center justify-between bg-[#000000] border border-[#494847] p-4 rounded-sm">
-                      <span className="text-white text-sm font-mono">{origin}</span>
-                      <button className="text-[#ff716c] hover:text-[#ff9994] transition-colors">
-                        <span className="material-symbols-outlined">close</span>
-                      </button>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        value={auditVelocity}
+                        onChange={(e) => setAuditVelocity(parseInt(e.target.value) || 0)}
+                        className="w-full bg-slate-800/30 border border-slate-700/50 text-slate-200 px-4 py-2 rounded-sm focus:border-cyan-400/50 outline-none font-mono text-sm"
+                      />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] uppercase text-slate-500 font-bold">
+                        Req/Sec
+                      </span>
                     </div>
-                  ))}
+                    <p className="text-[10px] text-slate-500 uppercase leading-tight">
+                      Maximum auditing speed per node instance.
+                    </p>
+                  </div>
                 </div>
-                <input
-                  type="text"
-                  placeholder="Add new origin..."
-                  className="w-full mt-4 bg-[#000000] border border-[#494847] text-white px-4 py-3 rounded-sm text-sm focus:border-[#afffd1] outline-none"
-                />
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* WEBHOOKS TAB */}
-        {activeTab === 'webhooks' && (
-          <div className="glass-panel p-8 rounded-lg neon-glow">
-            <div className="flex items-center gap-3 mb-8">
-              <span className="material-symbols-outlined text-[#8ff5ff] text-2xl">webhook</span>
-              <h3 className="font-headline text-2xl font-bold text-[#8ff5ff] uppercase">Global Webhooks</h3>
-            </div>
-
-            <div className="space-y-6">
-              {/* Webhook List */}
-              <div className="bg-[#000000] border border-[#494847] rounded-lg overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead className="bg-[#1a1919] border-b border-[#494847]">
-                      <tr>
-                        <th className="px-6 py-3 text-[10px] uppercase tracking-widest text-[#adaaaa] font-bold">Event</th>
-                        <th className="px-6 py-3 text-[10px] uppercase tracking-widest text-[#adaaaa] font-bold">Endpoint URL</th>
-                        <th className="px-6 py-3 text-[10px] uppercase tracking-widest text-[#adaaaa] font-bold">Status</th>
-                        <th className="px-6 py-3 text-[10px] uppercase tracking-widest text-[#adaaaa] font-bold">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#262626]">
-                      {([] as { event: string; url: string; status: string }[]).map((webhook, idx) => (
-                        <tr key={idx} className="hover:bg-[#1a1919] transition-colors">
-                          <td className="px-6 py-4 text-sm text-white font-mono">{webhook.event}</td>
-                          <td className="px-6 py-4 text-sm text-[#adaaaa] font-mono">{webhook.url}</td>
-                          <td className="px-6 py-4 text-sm">
-                            <span className={`px-3 py-1 rounded-sm text-[10px] font-bold uppercase tracking-widest ${
-                              webhook.status === 'Active'
-                                ? 'bg-[#afffd1]/20 text-[#afffd1]'
-                                : 'bg-[#494847]/20 text-[#adaaaa]'
-                            }`}>
-                              {webhook.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-sm">
-                            <button className="text-[#8ff5ff] hover:text-white transition-colors text-[10px] uppercase font-bold">
-                              Edit
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="mt-8 pt-6 border-t border-slate-800/50">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">
+                      Automatic Quarantine on Drift
+                    </label>
+                    <ToggleSwitch enabled={quarantineEnabled} onChange={setQuarantineEnabled} />
+                  </div>
+                  <p className="text-[10px] text-slate-500 uppercase mt-2 leading-tight">
+                    Restrict model traffic immediately upon adversarial drift detection.
+                  </p>
                 </div>
-              </div>
+              </SettingCard>
+            </motion.div>
+          )}
 
-              {/* Add Webhook Form */}
-              <div className="bg-[#131313] border border-[#494847]/20 p-6 rounded-lg">
-                <h4 className="font-headline text-lg font-bold text-[#8ff5ff] uppercase mb-4">Add New Webhook</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <select className="bg-[#000000] border border-[#494847] text-white px-4 py-3 rounded-sm text-sm focus:border-[#8ff5ff] outline-none">
-                    <option>Select Event Type</option>
-                    <option>model.flagged</option>
-                    <option>audit.completed</option>
-                    <option>alert.critical</option>
-                    <option>agent.registered</option>
-                  </select>
-                  <input
-                    type="url"
-                    placeholder="https://webhook.example.com/endpoint"
-                    className="bg-[#000000] border border-[#494847] text-white px-4 py-3 rounded-sm text-sm focus:border-[#8ff5ff] outline-none"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Secret Token (optional)"
-                    className="bg-[#000000] border border-[#494847] text-white px-4 py-3 rounded-sm text-sm focus:border-[#8ff5ff] outline-none"
-                  />
-                  <button className="bg-[#8ff5ff] text-[#005d63] font-headline font-bold uppercase tracking-tighter py-3 rounded-sm hover:brightness-110 transition-all active:scale-95">
-                    Add Webhook
-                  </button>
+          {/* USERS SETTINGS */}
+          {activeTab === 'users' && (
+            <motion.div className="space-y-8" variants={containerVariants} initial="initial" animate="animate">
+              <SettingCard title="User Management" icon={Users} description="Manage system access and permissions">
+                <div className="space-y-4">
+                  <motion.button
+                    className="w-full py-3 bg-cyan-400 text-black font-bold uppercase tracking-widest text-xs rounded-sm hover:shadow-[0_0_20px_rgba(0,240,255,0.4)] transition-all"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    + Add New User
+                  </motion.button>
+                  <div className="text-center py-12 text-slate-500">
+                    <Users size={48} className="mx-auto mb-3 opacity-30" strokeWidth={1.5} />
+                    <p className="text-sm">No users registered yet</p>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </DashboardLayout>
+              </SettingCard>
+            </motion.div>
+          )}
+
+          {/* NETWORK SETTINGS */}
+          {activeTab === 'network' && (
+            <motion.div className="space-y-8" variants={containerVariants} initial="initial" animate="animate">
+              <SettingCard title="Network Configuration" icon={Wifi} description="Configure network and connectivity">
+                <div className="space-y-4 text-center py-12">
+                  <Wifi size={48} className="mx-auto mb-3 text-slate-600" strokeWidth={1.5} />
+                  <p className="text-slate-400 text-sm">Network settings coming soon</p>
+                </div>
+              </SettingCard>
+            </motion.div>
+          )}
+
+          {/* WEBHOOKS SETTINGS */}
+          {activeTab === 'webhooks' && (
+            <motion.div className="space-y-8" variants={containerVariants} initial="initial" animate="animate">
+              <SettingCard title="Global Webhooks" icon={Webhook} description="Configure webhook integrations">
+                <div className="space-y-4">
+                  <motion.button
+                    className="w-full py-3 bg-cyan-400 text-black font-bold uppercase tracking-widest text-xs rounded-sm hover:shadow-[0_0_20px_rgba(0,240,255,0.4)] transition-all"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    + Add Webhook
+                  </motion.button>
+                  <div className="text-center py-12 text-slate-500">
+                    <Webhook size={48} className="mx-auto mb-3 opacity-30" strokeWidth={1.5} />
+                    <p className="text-sm">No webhooks configured</p>
+                  </div>
+                </div>
+              </SettingCard>
+            </motion.div>
+          )}
+        </div>
+      </DashboardLayout>
+    </PageTransition>
   );
 }
