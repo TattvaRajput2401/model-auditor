@@ -97,9 +97,12 @@ class User(Base):
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"))
 
     username = Column(Text, unique=True, nullable=False)
+    email = Column(Text, unique=True, nullable=False)
+    full_name = Column(Text, nullable=True)
     password_hash = Column(Text, nullable=False)
 
     role = Column(Enum(UserRole), nullable=False, default=UserRole.viewer)
+    is_active = Column(Boolean, nullable=False, default=True)
 
     created_at = Column(TIMESTAMP, server_default=sa.text("now()"))
     deleted_at = Column(TIMESTAMP, nullable=True)
