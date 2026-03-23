@@ -17,7 +17,7 @@ const mockLogs: LogEntry[] = [];
 export default function LogsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterLevel, setFilterLevel] = useState<'ALL' | 'INFO' | 'WARNING' | 'ERROR'>('ALL');
-  const [logs, setLogs] = useState(mockLogs);
+  const logs = mockLogs;
 
   const filtered = logs.filter((log) => {
     const matchesSearch =
