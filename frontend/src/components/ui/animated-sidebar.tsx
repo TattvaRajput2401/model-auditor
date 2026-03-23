@@ -11,10 +11,8 @@ import {
   Terminal,
   Shield,
   Settings,
-  Menu,
   LogOut,
   HelpCircle,
-  Radio,
 } from 'lucide-react';
 
 const NavItem = ({
@@ -40,13 +38,18 @@ const NavItem = ({
       whileHover={{ x: 4 }}
       whileTap={{ scale: 0.98 }}
     >
-      <Icon
-        size={20}
-        className={`flex-shrink-0 transition-colors duration-200 ${
-          active ? 'text-primary' : 'text-slate-400 group-hover:text-primary'
-        }`}
-        strokeWidth={1.5}
-      />
+      <motion.div
+        animate={active ? { rotate: 360, scale: 1.1 } : { rotate: 0, scale: 1 }}
+        transition={{ duration: active ? 0.6 : 0.3 }}
+      >
+        <Icon
+          size={20}
+          className={`flex-shrink-0 transition-colors duration-200 ${
+            active ? 'text-primary' : 'text-slate-400 group-hover:text-primary'
+          }`}
+          strokeWidth={1.5}
+        />
+      </motion.div>
       <AnimatePresence>
         {isOpen && (
           <motion.span
@@ -100,6 +103,55 @@ export default function AnimatedSidebar() {
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         className="fixed left-0 top-0 h-full z-40 flex flex-col pt-20 pb-8 bg-gradient-to-b from-slate-950 to-[#0A0A0A] border-r border-slate-800/50 shadow-[4px_0_24px_rgba(0,240,255,0.05)] font-headline"
       >
+        {/* Sidebar Header with Toggle */}
+        <div className="absolute top-0 left-0 right-0 h-20 flex items-center justify-between px-4 md:px-6 border-b border-slate-800/50 bg-slate-950/50 backdrop-blur-sm">
+          <AnimatePresence>
+            {isOpen && (
+              <motion.h2
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2 }}
+                className="text-primary font-black text-sm uppercase tracking-tighter hidden md:block"
+              >
+                Model Auditor
+              </motion.h2>
+            )}
+          </AnimatePresence>
+
+          {/* Animated Burger Menu Toggle */}
+          <motion.button
+            onClick={() => setIsOpen(!isOpen)}
+            className="p-2 hover:bg-slate-800/50 rounded-sm transition-all duration-200 text-cyan-400"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <motion.div className="relative w-5 h-5 flex flex-col justify-center items-center gap-1.5">
+              {/* Top line */}
+              <motion.div
+                initial={false}
+                animate={isOpen ? { rotate: 45, y: 10 } : { rotate: 0, y: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className="w-5 h-0.5 bg-cyan-400 rounded-full origin-center"
+              />
+              {/* Middle line */}
+              <motion.div
+                initial={false}
+                animate={isOpen ? { opacity: 0, x: 10 } : { opacity: 1, x: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className="w-5 h-0.5 bg-cyan-400 rounded-full"
+              />
+              {/* Bottom line */}
+              <motion.div
+                initial={false}
+                animate={isOpen ? { rotate: -45, y: -10 } : { rotate: 0, y: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className="w-5 h-0.5 bg-cyan-400 rounded-full origin-center"
+              />
+            </motion.div>
+          </motion.button>
+        </div>
+
         {/* Sidebar Header */}
         <div className={`px-6 mb-8 transition-all duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
           <motion.div
@@ -239,16 +291,6 @@ export default function AnimatedSidebar() {
           />
         )}
       </AnimatePresence>
-
-      {/* Toggle Button */}
-      <motion.button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed left-4 top-4 z-50 p-2 bg-slate-900/80 hover:bg-slate-800 rounded-sm transition-all duration-200 text-cyan-400 backdrop-blur-sm border border-slate-800/50 md:hidden"
-        whileHover={{ scale: 1.05, backgroundColor: 'rgb(30, 41, 59)' }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <Menu size={20} strokeWidth={1.5} />
-      </motion.button>
     </>
   );
 }
