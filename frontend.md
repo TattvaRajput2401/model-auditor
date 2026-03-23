@@ -3494,7 +3494,7 @@
 <div class="space-y-1">
 <label class="text-[10px] font-headline uppercase text-neutral-500 tracking-widest">Endpoint URL</label>
 <div class="font-mono text-xs text-secondary bg-surface-container-lowest p-2 rounded truncate border border-white/5">
-                                    https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
+                                    https://hooks.slack.com/services/YOUR_WORKSPACE_ID/YOUR_BOT_ID/YOUR_TOKEN
                                 </div>
 </div>
 <div class="space-y-1">
